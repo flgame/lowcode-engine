@@ -705,7 +705,7 @@ export default function baseRendererFactory(): IBaseRenderComponent {
      */
     get __componentHOCs(): IComponentConstruct[] {
       if (this.__designModeIsDesign) {
-        return [leafWrapper, compWrapper];
+        return [compWrapper, leafWrapper];
       }
       return [compWrapper];
     }

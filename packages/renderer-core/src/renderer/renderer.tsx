@@ -21,8 +21,13 @@ export default function rendererFactory(): IRenderComponent {
 
   class FaultComponent extends PureComponent<IPublicTypeNodeSchema | any> {
     render() {
-      logger.error(`%c${this.props.componentName || ''} 组件渲染异常, 异常原因: ${this.props.error?.message || this.props.error || '未知'}`, 'color: #ff0000;');
+      const { __tag, componentId, componentName, error, forwardRef } = this.props;
+      logger.error(`%c${componentName || ''} 组件渲染异常, 异常原因: ${error?.message || error || '未知'}`, 'color: #ff0000;');
       return createElement(Div, {
+        ref: forwardRef,
+        __tag,
+        componentid: componentId,
+        _componentname: componentName,
         style: {
           width: '100%',
           height: '50px',
@@ -32,7 +37,7 @@ export default function rendererFactory(): IRenderComponent {
           color: '#ff0000',
           border: '2px solid #ff0000',
         },
-      }, `${this.props.componentName || ''} 组件渲染异常，请查看控制台日志`);
+      }, `${componentName || ''} 组件渲染异常，请查看控制台日志`);
     }
   }
 

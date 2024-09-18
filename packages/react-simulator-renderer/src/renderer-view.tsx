@@ -197,9 +197,9 @@ class Renderer extends Component<{
         faultComponent={host.faultComponent}
         faultComponentMap={host.faultComponentMap}
         customCreateElement={(Component: any, props: any, children: any) => {
-          const { __id, ...viewProps } = props;
-          viewProps.componentId = __id;
-          const leaf = documentInstance.getNode(__id) as Node;
+          const { __id, componentId, ...viewProps } = props;
+          viewProps.componentId = __id || componentId;
+          const leaf = documentInstance.getNode(viewProps.componentId) as Node;
           if (isFromVC(leaf?.componentMeta)) {
             viewProps._leaf = leaf.internalToShellNode();
           }
