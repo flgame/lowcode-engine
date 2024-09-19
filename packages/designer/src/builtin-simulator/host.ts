@@ -518,6 +518,45 @@ export class BuiltinSimulatorHost implements ISimulatorHost<BuiltinSimulatorProp
     }
   }
 
+  isIgnoreSelector(e: MouseEvent) {
+    const clickTrigger = engineConfig.get('clickTrigger');
+    if (clickTrigger && !e[clickTrigger+'Key']) {
+      return true;
+    }
+    
+    const { target } = e;
+    const customizeIgnoreSelectors = engineConfig.get('customizeIgnoreSelectors');
+    // TODO: need more elegant solution to ignore click events of components in designer
+    const defaultIgnoreSelectors: string[] = [
+      '.next-input-group',
+      '.next-checkbox-group',
+      '.next-checkbox-wrapper',
+      '.next-date-picker',
+      '.next-input',
+      '.next-month-picker',
+      '.next-number-picker',
+      '.next-radio-group',
+      '.next-range',
+      '.next-range-picker',
+      '.next-rating',
+      '.next-select',
+      '.next-switch',
+      '.next-time-picker',
+      '.next-upload',
+      '.next-year-picker',
+      '.next-breadcrumb-item',
+      '.next-calendar-header',
+      '.next-calendar-table',
+      '.editor-container', // 富文本组件
+    ];
+    const ignoreSelectors = customizeIgnoreSelectors?.(defaultIgnoreSelectors, e) || defaultIgnoreSelectors;
+    const ignoreSelectorsString = ignoreSelectors.join(',');
+    // 提供了 customizeIgnoreSelectors 的情况下，忽略 isFormEvent() 判断
+    if ((!customizeIgnoreSelectors && isFormEvent(e)) || target?.closest(ignoreSelectorsString)) {
+      return true;
+    }
+    return false;
+  }
   setupEvents() {
     // TODO: Thinkof move events control to simulator renderer
     //       just listen special callback
@@ -542,7 +581,7 @@ export class BuiltinSimulatorHost implements ISimulatorHost<BuiltinSimulatorProp
       'mousedown',
       (downEvent: MouseEvent) => {
         // fix for popups close logic
-        document.dispatchEvent(new Event('mousedown'));
+        document.dispatchEvent(new MouseEvent('mousedown', downEvent));
         const documentModel = this.project.currentDocument;
         if (this.liveEditing.editing || !documentModel) {
           return;
@@ -660,6 +699,11 @@ export class BuiltinSimulatorHost implements ISimulatorHost<BuiltinSimulatorProp
         }
 
         doc.addEventListener('mouseup', checkSelect, true);
+
+        if (this.isIgnoreSelector(downEvent)) {
+          downEvent.preventDefault();
+          downEvent.stopPropagation();
+        }
       },
       true,
     );
@@ -668,39 +712,9 @@ export class BuiltinSimulatorHost implements ISimulatorHost<BuiltinSimulatorProp
       'click',
       (e) => {
         // fix for popups close logic
-        const x = new Event('click');
-        x.initEvent('click', true);
-        this._iframe?.dispatchEvent(x);
-        const { target } = e;
-
-        const customizeIgnoreSelectors = engineConfig.get('customizeIgnoreSelectors');
-        // TODO: need more elegant solution to ignore click events of components in designer
-        const defaultIgnoreSelectors: string[] = [
-          '.next-input-group',
-          '.next-checkbox-group',
-          '.next-checkbox-wrapper',
-          '.next-date-picker',
-          '.next-input',
-          '.next-month-picker',
-          '.next-number-picker',
-          '.next-radio-group',
-          '.next-range',
-          '.next-range-picker',
-          '.next-rating',
-          '.next-select',
-          '.next-switch',
-          '.next-time-picker',
-          '.next-upload',
-          '.next-year-picker',
-          '.next-breadcrumb-item',
-          '.next-calendar-header',
-          '.next-calendar-table',
-          '.editor-container', // 富文本组件
-        ];
-        const ignoreSelectors = customizeIgnoreSelectors?.(defaultIgnoreSelectors, e) || defaultIgnoreSelectors;
-        const ignoreSelectorsString = ignoreSelectors.join(',');
-        // 提供了 customizeIgnoreSelectors 的情况下，忽略 isFormEvent() 判断
-        if ((!customizeIgnoreSelectors && isFormEvent(e)) || target?.closest(ignoreSelectorsString)) {
+        const x = new MouseEvent('click', e);
+        document.dispatchEvent(x);
+        if (this.isIgnoreSelector(e)) {
           e.preventDefault();
           e.stopPropagation();
         }
