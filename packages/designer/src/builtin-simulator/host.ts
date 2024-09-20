@@ -520,10 +520,10 @@ export class BuiltinSimulatorHost implements ISimulatorHost<BuiltinSimulatorProp
 
   isIgnoreSelector(e: MouseEvent) {
     const clickTrigger = engineConfig.get('clickTrigger');
-    if (clickTrigger && !e[clickTrigger+'Key']) {
-      return true;
+    if (clickTrigger && e[clickTrigger + 'Key']) {
+      return false;
     }
-    
+
     const { target } = e;
     const customizeIgnoreSelectors = engineConfig.get('customizeIgnoreSelectors');
     // TODO: need more elegant solution to ignore click events of components in designer
@@ -699,11 +699,6 @@ export class BuiltinSimulatorHost implements ISimulatorHost<BuiltinSimulatorProp
         }
 
         doc.addEventListener('mouseup', checkSelect, true);
-
-        if (this.isIgnoreSelector(downEvent)) {
-          downEvent.preventDefault();
-          downEvent.stopPropagation();
-        }
       },
       true,
     );
